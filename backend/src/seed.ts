@@ -1,9 +1,11 @@
 // backend/src/seed.ts
 import mongoose from "mongoose";
+import bcrypt from "bcryptjs";
 import { ENV } from "./config/env";
 import { Store } from "./models/Store";
 import { Category } from "./models/Category";
 import { Product } from "./models/Product";
+import { User } from "./models/User";
 
 const run = async () => {
   try {
@@ -14,18 +16,19 @@ const run = async () => {
     await mongoose.connect(ENV.MONGO_URI);
     console.log("MongoDB connected (seed)");
 
-    // optional: чистим всё перед сидом
+    // clean collections
     await Promise.all([
       Store.deleteMany({}),
       Category.deleteMany({}),
-      Product.deleteMany({})
+      Product.deleteMany({}),
+      User.deleteMany({})
     ]);
 
-    // 1) Stores
+    // STORES
     const gamsakhurdia = await Store.create({
       name: "Konstantine Gamsakhurdia",
-      slug: "lenina", // slug оставляем "lenina", чтобы не ломать фронт
-      address: "Batumi, Konst. Gamsakhurdia st.",
+      slug: "lenina", // slug оставляем lenina, чтобы фронт не ломать
+      address: "Batumi, Konstantine Gamsakhurdia st.",
       workTime: "11:00 - 22:00",
       isActive: true
     });
@@ -38,9 +41,9 @@ const run = async () => {
       isActive: true
     });
 
-    console.log("Stores created:", gamsakhurdia.name, parnavaz.name);
+    console.log("Stores created");
 
-    // 2) Categories
+    // CATEGORIES
     const noodles = await Category.create({
       name: "Noodles",
       slug: "noodles",
@@ -61,7 +64,7 @@ const run = async () => {
 
     console.log("Categories created");
 
-    // 3) Products
+    // PRODUCTS
     await Product.create([
       {
         name: "Shin Ramyun (spicy)",
@@ -144,6 +147,30 @@ const run = async () => {
     ]);
 
     console.log("Products created");
+
+    // USERS (admin + staff)
+    const adminPasswordHash = await bcrypt.hash("admin123", 10);
+    const staffPasswordHash = await bcrypt.hash("staff123", 10);
+
+    const admin = await User.create({
+      name: "Main Admin",
+      email: "admin@dragon.local",
+      passwordHash: adminPasswordHash,
+      role: "ADMIN",
+      storeIds: [gamsakhurdia._id, parnavaz._id]
+    });
+
+    const staff = await User.create({
+      name: "Store Staff",
+      email: "staff@dragon.local",
+      passwordHash: staffPasswordHash,
+      role: "STAFF",
+      storeIds: [parnavaz._id] 
+    });
+
+    console.log("Users created:", admin.email, staff.email);
+    console.log("Admin password: admin123");
+    console.log("Staff password: staff123");
 
     await mongoose.disconnect();
     console.log("MongoDB disconnected (seed finished)");

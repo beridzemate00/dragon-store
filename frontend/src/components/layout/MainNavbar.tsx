@@ -1,3 +1,4 @@
+// frontend/src/components/layout/MainNavbar.tsx
 import { Link, useLocation } from "react-router-dom";
 import { useCart } from "../../context/CartContext";
 import type { StoreSlug } from "../../types";
@@ -6,9 +7,7 @@ const MainNavbar = () => {
   const location = useLocation();
   const { totalItems, storeSlug } = useCart();
 
-  // Detect current store by:
-  // 1) storeSlug из контекста (если уже выбран)
-  // 2) по URL: /store/lenina или /store/parnavaz
+
   let activeStore: StoreSlug | null = storeSlug;
 
   if (!activeStore) {
@@ -27,7 +26,6 @@ const MainNavbar = () => {
         </Link>
 
         <nav className="flex items-center gap-4 text-sm">
-          {/* If no store selected yet → показываем оба магазина */}
           {!activeStore && (
             <>
               <Link to="/store/lenina" className={isActive("/store/lenina")}>
@@ -39,7 +37,7 @@ const MainNavbar = () => {
             </>
           )}
 
-          {/* Если пользователь уже "внутри" конкретного магазина → показываем ТОЛЬКО его */}
+          {/* Если клиент уже "внутри" филиала → показываем только его */}
           {activeStore === "lenina" && (
             <Link to="/store/lenina" className={isActive("/store/lenina")}>
               Store Gamsakhurdia
