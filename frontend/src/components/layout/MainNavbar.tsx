@@ -1,9 +1,20 @@
 import { Link, useLocation } from "react-router-dom";
 import { useCart } from "../../context/CartContext";
+import type { StoreSlug } from "../../types";
 
 const MainNavbar = () => {
   const location = useLocation();
-  const { totalItems } = useCart();
+  const { totalItems, storeSlug } = useCart();
+
+  // Detect current store by:
+  // 1) storeSlug из контекста (если уже выбран)
+  // 2) по URL: /store/lenina или /store/parnavaz
+  let activeStore: StoreSlug | null = storeSlug;
+
+  if (!activeStore) {
+    if (location.pathname.startsWith("/store/lenina")) activeStore = "lenina";
+    if (location.pathname.startsWith("/store/parnavaz")) activeStore = "parnavaz";
+  }
 
   const isActive = (path: string) =>
     location.pathname === path ? "text-red-600 font-semibold" : "text-slate-700";
@@ -14,13 +25,33 @@ const MainNavbar = () => {
         <Link to="/" className="font-bold text-lg">
           Dragon Store
         </Link>
+
         <nav className="flex items-center gap-4 text-sm">
-          <Link to="/store/lenina" className={isActive("/store/lenina")}>
-            Store Gamsakhurdia
-          </Link>
-          <Link to="/store/parnavaz" className={isActive("/store/parnavaz")}>
-            Store Parnavaz Mepe
-          </Link>
+          {/* If no store selected yet → показываем оба магазина */}
+          {!activeStore && (
+            <>
+              <Link to="/store/lenina" className={isActive("/store/lenina")}>
+                Store Gamsakhurdia
+              </Link>
+              <Link to="/store/parnavaz" className={isActive("/store/parnavaz")}>
+                Store Parnavaz Mepe
+              </Link>
+            </>
+          )}
+
+          {/* Если пользователь уже "внутри" конкретного магазина → показываем ТОЛЬКО его */}
+          {activeStore === "lenina" && (
+            <Link to="/store/lenina" className={isActive("/store/lenina")}>
+              Store Gamsakhurdia
+            </Link>
+          )}
+
+          {activeStore === "parnavaz" && (
+            <Link to="/store/parnavaz" className={isActive("/store/parnavaz")}>
+              Store Parnavaz Mepe
+            </Link>
+          )}
+
           <Link to="/cart" className="relative text-slate-700">
             Cart
             {totalItems > 0 && (
@@ -28,12 +59,6 @@ const MainNavbar = () => {
                 {totalItems}
               </span>
             )}
-          </Link>
-          <Link to="/admin" className="text-slate-500 hover:text-red-500">
-            Admin
-          </Link>
-          <Link to="/staff" className="text-slate-500 hover:text-red-500">
-            Staff
           </Link>
         </nav>
       </div>
