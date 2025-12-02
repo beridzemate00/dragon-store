@@ -1,46 +1,51 @@
+// backend/src/middleware/auth.ts
 import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 import { ENV } from "../config/env";
-import { User, IUser, UserRole } from "../models/User";
 
 export interface AuthRequest extends Request {
-  user?: IUser;
+  user?: {
+    id: string;
+    role: "ADMIN" | "STAFF";
+  };
 }
 
-interface JwtPayload {
-  userId: string;
-}
-
-export const authRequired = async (
+export const requireAuth = (
   req: AuthRequest,
   res: Response,
   next: NextFunction
 ) => {
+  const authHeader = req.headers.authorization;
+  if (!authHeader?.startsWith("Bearer ")) {
+    return res.status(401).json({ message: "Unauthorized" });
+  }
+
+  const token = authHeader.slice("Bearer ".length);
+
   try {
-    const authHeader = req.headers.authorization;
-    if (!authHeader?.startsWith("Bearer ")) {
-      return res.status(401).json({ message: "Unauthorized" });
-    }
+    const payload = jwt.verify(token, ENV.JWT_SECRET) as {
+      id: string;
+      role: "ADMIN" | "STAFF";
+    };
 
-    const token = authHeader.slice(7);
-    const decoded = jwt.verify(token, ENV.JWT_SECRET) as JwtPayload;
+    req.user = {
+      id: payload.id,
+      role: payload.role
+    };
 
-    const user = await User.findById(decoded.userId);
-    if (!user) {
-      return res.status(401).json({ message: "User not found" });
-    }
-
-    req.user = user;
     next();
   } catch (err) {
-    console.error("authRequired error:", err);
+    console.error("JWT verify error:", err);
     return res.status(401).json({ message: "Invalid token" });
   }
 };
 
-export const requireRole = (roles: UserRole[]) => {
+export const requireRole = (role: "ADMIN" | "STAFF") => {
   return (req: AuthRequest, res: Response, next: NextFunction) => {
-    if (!req.user || !roles.includes(req.user.role)) {
+    if (!req.user) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    if (req.user.role !== role) {
       return res.status(403).json({ message: "Forbidden" });
     }
     next();

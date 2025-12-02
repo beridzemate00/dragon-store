@@ -38,7 +38,7 @@ const productSchema = new Schema<IProduct>(
     unit: { type: String, required: true },
     imageName: { type: String },
     isActive: { type: Boolean, default: true },
-    storeAvailability: {
+    storeAvailability: {  
       lenina: { type: storeAvailabilitySchema },
       parnavaz: { type: storeAvailabilitySchema }
     }

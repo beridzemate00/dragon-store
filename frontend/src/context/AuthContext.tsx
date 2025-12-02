@@ -6,12 +6,13 @@ import React, {
   ReactNode
 } from "react";
 import { loginRequest, type AuthUser } from "../api/auth";
+import { setAuthToken } from "../api/client";
 
 interface AuthContextValue {
   user: AuthUser | null;
   token: string | null;
   isLoading: boolean;
-  login: (email: string, password: string) => Promise<void>;
+  login: (email: string, password: string) => Promise<AuthUser>;
   logout: () => void;
 }
 
@@ -24,7 +25,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [token, setToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // load from localStorage on first render
+  // 1) load from localStorage
   useEffect(() => {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
@@ -32,6 +33,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         const parsed = JSON.parse(raw) as { user: AuthUser; token: string };
         setUser(parsed.user);
         setToken(parsed.token);
+        setAuthToken(parsed.token);
       }
     } catch {
       // ignore
@@ -40,19 +42,24 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   }, []);
 
-  const login = async (email: string, password: string) => {
+  // 2) login
+  const login = async (email: string, password: string): Promise<AuthUser> => {
     const data = await loginRequest(email, password);
     setUser(data.user);
     setToken(data.token);
+    setAuthToken(data.token);
     localStorage.setItem(
       STORAGE_KEY,
       JSON.stringify({ user: data.user, token: data.token })
     );
+    return data.user;
   };
 
+  // 3) logout
   const logout = () => {
     setUser(null);
     setToken(null);
+    setAuthToken(null);
     localStorage.removeItem(STORAGE_KEY);
   };
 
