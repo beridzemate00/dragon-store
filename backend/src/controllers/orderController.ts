@@ -97,7 +97,6 @@ export const getOrdersForAdmin = async (req: AuthRequest, res: Response) => {
   }
 };
 
-// staff видит только свои магазины
 export const getOrdersForStaff = async (req: AuthRequest, res: Response) => {
   try {
     if (!req.user || req.user.role !== "STAFF") {
