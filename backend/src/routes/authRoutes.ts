@@ -1,10 +1,14 @@
-import { Router } from "express";
-import { login, me } from "../controllers/authController";
-import { authRequired } from "../middleware/auth";
+// backend/src/routes/authRoutes.ts
+import express from "express";
+import { login } from "../controllers/authController";
+import { requireAuth } from "../middleware/auth";
 
-const router = Router();
+const router = express.Router();
 
 router.post("/login", login);
-router.get("/me", authRequired, me);
+
+router.get("/me", requireAuth, (req, res) => {
+  res.status(501).json({ message: "getMe not implemented in controller" });
+});
 
 export default router;

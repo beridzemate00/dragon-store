@@ -1,49 +1,49 @@
-import { Schema, model, Document, Types } from "mongoose";
+// backend/src/models/Product.ts
+import mongoose, { Schema, Document } from "mongoose";
 
-export interface IStoreAvailability {
+export interface StoreAvailabilityEntry {
   inStock: number;
   priceOverride?: number;
 }
 
-export interface IProduct extends Document {
-  name: string;
-  slug: string;
-  description?: string;
-  category: Types.ObjectId;
-  basePrice: number;
-  unit: string;
-  imageName?: string;
-  isActive: boolean;
-  storeAvailability: {
-    lenina?: IStoreAvailability;
-    parnavaz?: IStoreAvailability;
-  };
+export interface StoreAvailability {
+  parnavaz?: StoreAvailabilityEntry;
+  konstantine?: StoreAvailabilityEntry;
+  lenina?: StoreAvailabilityEntry;
 }
 
-const storeAvailabilitySchema = new Schema<IStoreAvailability>(
-  {
-    inStock: { type: Number, default: 0 },
-    priceOverride: { type: Number }
-  },
-  { _id: false }
-);
+export interface ProductDoc extends Document {
+  name: string;
+  slug: string;
+  basePrice: number;
+  unit?: string; 
+  description?: string;
+  category?: mongoose.Types.ObjectId; 
+  storeAvailability: StoreAvailability;
+  createdAt: Date;
+  updatedAt: Date;
+}
 
-const productSchema = new Schema<IProduct>(
+const ProductSchema = new Schema<ProductDoc>(
   {
     name: { type: String, required: true },
     slug: { type: String, required: true, unique: true },
-    description: { type: String },
-    category: { type: Schema.Types.ObjectId, ref: "Category", required: true },
     basePrice: { type: Number, required: true },
-    unit: { type: String, required: true },
-    imageName: { type: String },
-    isActive: { type: Boolean, default: true },
-    storeAvailability: {  
-      lenina: { type: storeAvailabilitySchema },
-      parnavaz: { type: storeAvailabilitySchema }
+
+    unit: { type: String, required: false },
+    description: { type: String, required: false },
+    category: {
+      type: Schema.Types.ObjectId,
+      ref: "Category",
+      required: false
+    },
+
+    storeAvailability: {
+      type: Schema.Types.Mixed, 
+      default: {}
     }
   },
   { timestamps: true }
 );
 
-export const Product = model<IProduct>("Product", productSchema);
+export const Product = mongoose.model<ProductDoc>("Product", ProductSchema);
