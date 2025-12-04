@@ -1,40 +1,63 @@
+// backend/src/controllers/orderController.ts
 import { Request, Response } from "express";
 import { Store } from "../models/Store";
 import { Product } from "../models/Product";
-import { Order, OrderStatus } from "../models/Order";
+import { Order } from "../models/Order";
 import { User } from "../models/User";
 import { AuthRequest } from "../middleware/auth";
 
-// клиент создаёт заказ
+// public: client creates order (cash only + delivery address)
 export const createOrder = async (req: Request, res: Response) => {
   try {
-    const { storeSlug, items, customerName, customerPhone, comment } = req.body as {
+    const {
+      storeSlug,
+      items,
+      customerName,
+      customerPhone,
+      customerAddress,
+      comment
+    } = req.body as {
       storeSlug?: string;
       items?: { productId: string; quantity: number }[];
       customerName?: string;
       customerPhone?: string;
+      customerAddress?: string;
       comment?: string;
     };
 
-    if (!storeSlug || !items?.length || !customerName || !customerPhone) {
+    // basic validation of request body
+    if (
+      !storeSlug ||
+      !items?.length ||
+      !customerName ||
+      !customerPhone ||
+      !customerAddress
+    ) {
       return res.status(400).json({ message: "Invalid data" });
     }
 
+    // find active store by slug
     const store = await Store.findOne({ slug: storeSlug, isActive: true });
     if (!store) {
       return res.status(400).json({ message: "Store not found" });
     }
 
-    // загружаем продукты
+    // load all products used in this order
     const ids = items.map((i) => i.productId);
     const products = await Product.find({ _id: { $in: ids } });
 
+    // choose availability key by store slug
     const storeKey =
-      storeSlug === "parnavaz" ? "parnavaz" : storeSlug === "konstantine" ? "konstantine" : "lenina";
+      storeSlug === "parnavaz"
+        ? "parnavaz"
+        : storeSlug === "konstantine"
+        ? "konstantine"
+        : "lenina";
 
     const orderItems: any[] = [];
     let totalPrice = 0;
 
+    // build order items with price snapshots
     for (const clientItem of items) {
       const product = products.find(
         (p) => String(p._id) === String(clientItem.productId)
@@ -61,13 +84,16 @@ export const createOrder = async (req: Request, res: Response) => {
       return res.status(400).json({ message: "No valid items" });
     }
 
+    // create order document
     const order = await Order.create({
       store: store._id,
       items: orderItems,
       customerName,
       customerPhone,
+      customerAddress,
       comment,
       status: "new",
+      paymentMethod: "cash",
       totalPrice
     });
 
@@ -79,7 +105,7 @@ export const createOrder = async (req: Request, res: Response) => {
   }
 };
 
-// админ видит все заказы
+// admin: see all orders (for all stores)
 export const getOrdersForAdmin = async (req: AuthRequest, res: Response) => {
   try {
     if (!req.user || req.user.role !== "ADMIN") {
@@ -97,6 +123,7 @@ export const getOrdersForAdmin = async (req: AuthRequest, res: Response) => {
   }
 };
 
+// staff: see orders only for assigned stores
 export const getOrdersForStaff = async (req: AuthRequest, res: Response) => {
   try {
     if (!req.user || req.user.role !== "STAFF") {

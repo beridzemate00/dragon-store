@@ -1,55 +1,34 @@
 // backend/src/controllers/productController.ts
 import { Request, Response } from "express";
 import { Product } from "../models/Product";
-import { Category } from "../models/Category";
 
+// return products, optionally filtered by storeSlug and availability
 export const getProducts = async (req: Request, res: Response) => {
   try {
-    const { storeSlug, categorySlug, search } = req.query;
+    const { storeSlug } = req.query as { storeSlug?: string };
 
-    // base filter – only active products
-    const filter: any = { isActive: true };
+    const products = await Product.find();
 
-    // filter by category, if provided
-    if (categorySlug) {
-      const category = await Category.findOne({ slug: categorySlug });
-      if (category) {
-        filter.category = category._id;
-      }
+    if (!storeSlug) {
+      // no store filter: return all products
+      return res.json(products);
     }
 
-    // search by name, if provided
-    if (search) {
-      filter.name = { $regex: String(search), $options: "i" };
-    }
+    // filter products by availability for given store
+    const filtered = products.filter((p: any) => {
+      const availability = p.storeAvailability || {};
+      const storeKey =
+        storeSlug === "parnavaz"
+          ? "parnavaz"
+          : storeSlug === "konstantine"
+          ? "konstantine"
+          : "lenina";
 
-    // load products with category populated
-    const products = await Product.find(filter).populate("category");
-
-    // which store (for price + stock)?
-    const store = storeSlug === "parnavaz" ? "parnavaz" : "lenina";
-
-    // map to DTO for frontend
-    const mapped = products.map((p: any) => {
-      const availability = (p.storeAvailability as any)?.[store];
-      const inStock: number = availability?.inStock ?? 0;
-      const price: number = availability?.priceOverride ?? p.basePrice;
-
-      return {
-        id: p._id,
-        name: p.name,
-        slug: p.slug,
-        description: p.description,
-        category: p.category ? (p.category as any).name : null,
-        basePrice: p.basePrice,
-        unit: p.unit,
-        imageName: p.imageName,
-        inStock,
-        price
-      };
+      const entry = availability[storeKey];
+      return entry && entry.inStock > 0;
     });
 
-    res.json(mapped);
+    res.json(filtered);
   } catch (err) {
     console.error("getProducts error:", err);
     res.status(500).json({ message: "Server error" });

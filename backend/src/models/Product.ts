@@ -16,10 +16,10 @@ export interface ProductDoc extends Document {
   name: string;
   slug: string;
   basePrice: number;
-  unit?: string; 
+  unit?: string; // optional unit (e.g. "pcs", "pack")
   description?: string;
-  category?: mongoose.Types.ObjectId; 
-  storeAvailability: StoreAvailability;
+  category?: mongoose.Types.ObjectId; // optional reference to Category
+  storeAvailability: StoreAvailability; // per-store stock and price override
   createdAt: Date;
   updatedAt: Date;
 }
@@ -29,7 +29,6 @@ const ProductSchema = new Schema<ProductDoc>(
     name: { type: String, required: true },
     slug: { type: String, required: true, unique: true },
     basePrice: { type: Number, required: true },
-
     unit: { type: String, required: false },
     description: { type: String, required: false },
     category: {
@@ -37,9 +36,8 @@ const ProductSchema = new Schema<ProductDoc>(
       ref: "Category",
       required: false
     },
-
     storeAvailability: {
-      type: Schema.Types.Mixed, 
+      type: Schema.Types.Mixed,
       default: {}
     }
   },
