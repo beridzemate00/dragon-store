@@ -6,7 +6,7 @@ import { ENV } from "../config/env";
 export interface AuthRequest extends Request {
   user?: {
     id: string;
-    role: "ADMIN" | "STAFF";
+    role: "ADMIN" | "STAFF" | "CLIENT";
   };
 }
 
@@ -25,7 +25,7 @@ export const requireAuth = (
   try {
     const payload = jwt.verify(token, ENV.JWT_SECRET) as {
       id: string;
-      role: "ADMIN" | "STAFF";
+      role: "ADMIN" | "STAFF" | "CLIENT";
     };
 
     req.user = {
@@ -40,7 +40,7 @@ export const requireAuth = (
   }
 };
 
-export const requireRole = (role: "ADMIN" | "STAFF") => {
+export const requireRole = (role: "ADMIN" | "STAFF" | "CLIENT") => {
   return (req: AuthRequest, res: Response, next: NextFunction) => {
     if (!req.user) {
       return res.status(401).json({ message: "Unauthorized" });
