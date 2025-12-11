@@ -1,16 +1,21 @@
 // backend/src/middleware/auth.ts
 import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
+import { Types } from "mongoose";
 import { ENV } from "../config/env";
+import { User } from "../models/User";
 
 export interface AuthRequest extends Request {
   user?: {
     id: string;
+    name: string;
+    email: string;
     role: "ADMIN" | "STAFF" | "CLIENT";
+    storeIds: Types.ObjectId[];
   };
 }
 
-export const requireAuth = (
+export const requireAuth = async (
   req: AuthRequest,
   res: Response,
   next: NextFunction
@@ -25,12 +30,20 @@ export const requireAuth = (
   try {
     const payload = jwt.verify(token, ENV.JWT_SECRET) as {
       id: string;
-      role: "ADMIN" | "STAFF" | "CLIENT";
     };
 
+    // Fetch full user from database
+    const user = await User.findById(payload.id);
+    if (!user) {
+      return res.status(401).json({ message: "User not found" });
+    }
+
     req.user = {
-      id: payload.id,
-      role: payload.role
+      id: user._id.toString(),
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      storeIds: user.storeIds
     };
 
     next();

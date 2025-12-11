@@ -65,6 +65,12 @@ const run = async () => {
       passwordHash: staffPassword,
       role: "STAFF",
       storeIds: [parnavaz._id]
+    },
+    {
+      name: "Client",
+      email: "client@shop.com",
+      passwordHash: await bcrypt.hash("client123", 10),
+      role: "CLIENT"
     }
   ]);
 
