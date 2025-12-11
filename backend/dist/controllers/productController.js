@@ -12,17 +12,36 @@ const getProducts = async (req, res) => {
             return res.json(products);
         }
         // filter products by availability for given store
-        const filtered = products.filter((p) => {
+        const storeKey = storeSlug === "parnavaz"
+            ? "parnavaz"
+            : storeSlug === "konstantine"
+                ? "konstantine"
+                : null;
+        if (!storeKey) {
+            return res.json([]);
+        }
+        const filtered = products
+            .filter((p) => {
             const availability = p.storeAvailability || {};
-            const storeKey = storeSlug === "parnavaz"
-                ? "parnavaz"
-                : storeSlug === "konstantine"
-                    ? "konstantine"
-                    : null;
-            if (!storeKey)
-                return false;
             const entry = availability[storeKey];
             return entry && entry.inStock > 0;
+        })
+            .map((p) => {
+            const availability = p.storeAvailability || {};
+            const entry = availability[storeKey];
+            const price = entry?.priceOverride ?? p.basePrice;
+            const inStock = entry?.inStock ?? 0;
+            return {
+                id: p._id.toString(),
+                name: p.name,
+                slug: p.slug,
+                description: p.description,
+                category: p.category,
+                basePrice: p.basePrice,
+                unit: p.unit || "pcs",
+                price,
+                inStock
+            };
         });
         res.json(filtered);
     }

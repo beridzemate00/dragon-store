@@ -15,7 +15,9 @@ export interface OrderDoc extends Document {
   items: OrderItem[];
   customerName: string;
   customerPhone: string;
+  customerAddress: string;
   comment?: string;
+  paymentMethod: string;
   status: OrderStatus;
   totalPrice: number;
   createdAt: Date;
@@ -39,7 +41,9 @@ const OrderSchema = new Schema<OrderDoc>(
     items: { type: [OrderItemSchema], required: true },
     customerName: { type: String, required: true },
     customerPhone: { type: String, required: true },
+    customerAddress: { type: String, required: true },
     comment: { type: String },
+    paymentMethod: { type: String, required: true, default: "cash" },
     status: {
       type: String,
       enum: ["new", "in_progress", "done", "cancelled"],
