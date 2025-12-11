@@ -1,4 +1,5 @@
 // frontend/src/pages/staff/StaffDashboardPage.tsx
+import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   fetchStaffOrders,
@@ -7,6 +8,7 @@ import {
   type OrderStatus
 } from "../../api/orders";
 import { useAuth } from "../../context/AuthContext";
+import { OrderConfirmPanel } from "../../components/ui/OrderConfirmPanel";
 
 const statusLabel: Record<OrderStatus, string> = {
   new: "New",
@@ -25,6 +27,7 @@ const statusColor: Record<OrderStatus, string> = {
 const StaffDashboardPage = () => {
   const { user, logout } = useAuth();
   const queryClient = useQueryClient();
+  const [selectedOrder, setSelectedOrder] = useState<OrderDTO | null>(null);
 
   const { data, isLoading, isError } = useQuery({
     queryKey: ["staffOrders"],
@@ -85,7 +88,8 @@ const StaffDashboardPage = () => {
             {orders.map((order) => (
               <div
                 key={order._id}
-                className="bg-white border rounded-xl p-3 shadow-sm"
+                className="bg-white border rounded-xl p-3 shadow-sm cursor-pointer hover:shadow-md transition-shadow"
+                onClick={() => setSelectedOrder(order)}
               >
                 <div className="flex justify-between items-start gap-3">
                   <div>
@@ -158,6 +162,12 @@ const StaffDashboardPage = () => {
           </div>
         )}
       </main>
+
+      <OrderConfirmPanel
+        order={selectedOrder}
+        onClose={() => setSelectedOrder(null)}
+        onStatusChange={handleStatusChange}
+      />
     </div>
   );
 };

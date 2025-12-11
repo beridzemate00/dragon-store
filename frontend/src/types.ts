@@ -1,4 +1,4 @@
-export type StoreSlug = "lenina" | "parnavaz";
+export type StoreSlug = "parnavaz" | "konstantine";
 
 export interface Store {
   _id: string;

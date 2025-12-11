@@ -1,4 +1,5 @@
 // frontend/src/pages/admin/AdminOrdersPage.tsx
+import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   fetchAdminOrders,
@@ -7,6 +8,7 @@ import {
   type OrderStatus
 } from "../../api/orders";
 import { useAuth } from "../../context/AuthContext";
+import { OrderConfirmPanel } from "../../components/ui/OrderConfirmPanel";
 
 const statusLabel: Record<OrderStatus, string> = {
   new: "New",
@@ -25,6 +27,7 @@ const statusColor: Record<OrderStatus, string> = {
 const AdminOrdersPage = () => {
   const { logout } = useAuth();
   const queryClient = useQueryClient();
+  const [selectedOrder, setSelectedOrder] = useState<OrderDTO | null>(null);
 
   const { data, isLoading, isError } = useQuery({
     queryKey: ["adminOrders"],
@@ -88,7 +91,8 @@ const AdminOrdersPage = () => {
                 {orders.map((order) => (
                   <tr
                     key={order._id}
-                    className="border-t hover:bg-slate-50/70 align-top"
+                    className="border-t hover:bg-slate-50/70 align-top cursor-pointer"
+                    onClick={() => setSelectedOrder(order)}
                   >
                     <td className="px-3 py-2 whitespace-nowrap text-xs text-slate-500">
                       {new Date(order.createdAt).toLocaleString()}
@@ -170,6 +174,12 @@ const AdminOrdersPage = () => {
           </div>
         )}
       </main>
+
+      <OrderConfirmPanel
+        order={selectedOrder}
+        onClose={() => setSelectedOrder(null)}
+        onStatusChange={handleStatusChange}
+      />
     </div>
   );
 };

@@ -51,8 +51,12 @@ export const createOrder = async (req: Request, res: Response) => {
       storeSlug === "parnavaz"
         ? "parnavaz"
         : storeSlug === "konstantine"
-        ? "konstantine"
-        : "lenina";
+          ? "konstantine"
+          : null;
+
+    if (!storeKey) {
+      return res.status(400).json({ message: "Invalid store" });
+    }
 
     const orderItems: any[] = [];
     let totalPrice = 0;

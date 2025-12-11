@@ -21,8 +21,10 @@ export const getProducts = async (req: Request, res: Response) => {
         storeSlug === "parnavaz"
           ? "parnavaz"
           : storeSlug === "konstantine"
-          ? "konstantine"
-          : "lenina";
+            ? "konstantine"
+            : null;
+
+      if (!storeKey) return false;
 
       const entry = availability[storeKey];
       return entry && entry.inStock > 0;

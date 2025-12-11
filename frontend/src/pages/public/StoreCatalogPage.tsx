@@ -22,7 +22,7 @@ const fetchProducts = async (storeSlug: StoreSlug): Promise<Product[]> => {
 
 const StoreCatalogPage = () => {
   const params = useParams();
-  const storeSlug = (params.storeSlug as StoreSlug) || "lenina";
+  const storeSlug = (params.storeSlug as StoreSlug) || "parnavaz";
   const { setStoreSlug, addItem } = useCart();
 
   const { data: stores } = useQuery({

@@ -9,7 +9,6 @@ export interface StoreAvailabilityEntry {
 export interface StoreAvailability {
   parnavaz?: StoreAvailabilityEntry;
   konstantine?: StoreAvailabilityEntry;
-  lenina?: StoreAvailabilityEntry;
 }
 
 export interface ProductDoc extends Document {

@@ -18,7 +18,9 @@ const getProducts = async (req, res) => {
                 ? "parnavaz"
                 : storeSlug === "konstantine"
                     ? "konstantine"
-                    : "lenina";
+                    : null;
+            if (!storeKey)
+                return false;
             const entry = availability[storeKey];
             return entry && entry.inStock > 0;
         });
